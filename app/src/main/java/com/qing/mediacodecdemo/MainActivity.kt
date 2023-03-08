@@ -1,9 +1,9 @@
 package com.qing.mediacodecdemo
 
 import android.app.Activity
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import com.qing.mediacodecdemo.ui.theme.MediaCodecDemoTheme
+import com.qing.mediacodecdemo.utils.AudioCodec
 
 class MainActivity : ComponentActivity() {
 
@@ -41,7 +42,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             } catch (e: Exception) {
-                TODO("Not yet implemented")
+                e.printStackTrace()
             }
 
         }
@@ -61,7 +62,39 @@ class MainActivity : ComponentActivity() {
     fun Greeting(name: String) {
         Column {
             Button(onClick = {
-                Log.d(TAG, "Greeting: ")
+                val aacPath = Environment.getExternalStorageDirectory().path + "/Dawn_clip.aac"
+                val pcmPath = Environment.getExternalStorageDirectory().path + "/Dawn_clip.pcm"
+                val aacResultPath =
+                    Environment.getExternalStorageDirectory().path + "/Dawn_clip1.aac"
+
+                AudioCodec.getPCMFromAudio(
+                    aacPath,
+                    pcmPath,
+                    object : AudioCodec.AudioDecodeListener {
+                        override fun decodeOver() {
+                            Log.d(TAG, "decodeOver: 音频解码完成")
+
+                            //解码完成之后需要编码
+                            AudioCodec.pcmToAudio(
+                                pcmPath,
+                                aacResultPath,
+                                object : AudioCodec.AudioDecodeListener {
+                                    override fun decodeOver() {
+                                        Log.d(TAG, "decodeOver: 音频编码完成")
+                                    }
+
+                                    override fun decodeFail() {
+                                        Log.d(TAG, "decodeFail: 音频编码失败")
+                                    }
+
+                                })
+                        }
+
+                        override fun decodeFail() {
+                            Log.d(TAG, "decodeFail: 音频解码失败")
+                        }
+
+                    })
             }) {
                 Text(text = name)
             }
