@@ -1,6 +1,7 @@
 package com.qing.mediacodecdemo
 
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
@@ -12,6 +13,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import com.qing.mediacodecdemo.ui.theme.MediaCodecDemoTheme
@@ -60,45 +62,57 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun Greeting(name: String) {
-        Column {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Button(onClick = {
-                val aacPath = Environment.getExternalStorageDirectory().path + "/Dawn_clip.aac"
-                val pcmPath = Environment.getExternalStorageDirectory().path + "/Dawn_clip.pcm"
-                val aacResultPath =
-                    Environment.getExternalStorageDirectory().path + "/Dawn_clip1.aac"
-
-                AudioCodec.getPCMFromAudio(
-                    aacPath,
-                    pcmPath,
-                    object : AudioCodec.AudioDecodeListener {
-                        override fun decodeOver() {
-                            Log.d(TAG, "decodeOver: 音频解码完成")
-
-                            //解码完成之后需要编码
-                            AudioCodec.pcmToAudio(
-                                pcmPath,
-                                aacResultPath,
-                                object : AudioCodec.AudioDecodeListener {
-                                    override fun decodeOver() {
-                                        Log.d(TAG, "decodeOver: 音频编码完成")
-                                    }
-
-                                    override fun decodeFail() {
-                                        Log.d(TAG, "decodeFail: 音频编码失败")
-                                    }
-
-                                })
-                        }
-
-                        override fun decodeFail() {
-                            Log.d(TAG, "decodeFail: 音频解码失败")
-                        }
-
-                    })
+                extractedAudio()
             }) {
                 Text(text = name)
             }
+            Button(onClick = {
+                val intent = Intent(this@MainActivity,VideoDecodeActivity::class.java)
+                startActivity(intent)
+
+            }) {
+                Text(text = "开始编解码视频")
+            }
         }
+    }
+
+
+    private fun extractedAudio() {
+        val aacPath = Environment.getExternalStorageDirectory().path + "/Dawn_clip.aac"
+        val pcmPath = Environment.getExternalStorageDirectory().path + "/Dawn_clip.pcm"
+        val aacResultPath =
+            Environment.getExternalStorageDirectory().path + "/Dawn_clip1.aac"
+
+        AudioCodec.getPCMFromAudio(
+            aacPath,
+            pcmPath,
+            object : AudioCodec.AudioDecodeListener {
+                override fun decodeOver() {
+                    Log.d(TAG, "decodeOver: 音频解码完成")
+
+                    //解码完成之后需要编码
+                    AudioCodec.pcmToAudio(
+                        pcmPath,
+                        aacResultPath,
+                        object : AudioCodec.AudioDecodeListener {
+                            override fun decodeOver() {
+                                Log.d(TAG, "decodeOver: 音频编码完成")
+                            }
+
+                            override fun decodeFail() {
+                                Log.d(TAG, "decodeFail: 音频编码失败")
+                            }
+
+                        })
+                }
+
+                override fun decodeFail() {
+                    Log.d(TAG, "decodeFail: 音频解码失败")
+                }
+
+            })
     }
 
     @Preview(showBackground = false)
